@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aether Wealth - Next-Gen Financial Engine</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        neon: {
+                            cyan: '#00f3ff',
+                            purple: '#b000ff',
+                            gold: '#ffd700',
+                            emerald: '#00ff88',
+                            rose: '#ff0055'
+                        },
+                        glass: {
+                            bg: 'rgba(13, 16, 27, 0.65)',
+                            border: 'rgba(255, 255, 255, 0.12)',
+                            card: 'rgba(21, 26, 43, 0.55)'
+                        }
+                    },
+                    boxShadow: {
+                        'neon-cyan': '0 0 20px rgba(0, 243, 255, 0.35)',
+                        'neon-purple': '0 0 20px rgba(176, 0, 255, 0.35)',
+                        'neon-gold': '0 0 20px rgba(255, 215, 0, 0.35)',
+                        'glass': '0 8px 32px 0 rgba(0, 0, 0, 0.37)'
+                    }
+                }
+            }
+        }
+    </script>
+
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #07090e;
+            color: #f3f4f6;
+            overflow-x: hidden;
+        }
+
+        /* Glassmorphism Styles */
+        .glass-panel {
+            background: rgba(15, 20, 32, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .glass-input {
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(8px);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .glass-input:focus {
+            background: rgba(255, 255, 255, 0.08);
+            border-color: #00f3ff;
+            box-shadow: 0 0 15px rgba(0, 243, 255, 0.25);
+            outline: none;
+        }
+
+        /* Animated Gradient Borders */
+        .neon-border-wrapper {
+            position: relative;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.3), rgba(176, 0, 255, 0.3), rgba(255, 215, 0, 0.3));
+            padding: 1px;
+            transition: all 0.5s ease;
+        }
+
+        .neon-border-wrapper::before {
+            content: '';
+            position: absolute;
+            inset: -2px;
+            border-radius: 1.5rem;
+            background: linear-gradient(135deg, #00f3ff, #b000ff, #ffd700);
+            z-index: -1;
+            opacity: 0.3;
+            filter: blur(12px);
+            transition: opacity 0.5s ease;
+        }
+
+        .neon-border-wrapper:hover::before {
+            opacity: 0.6;
+        }
+
+        /* Custom Neon Sliders */
+        input[type=range] {
+            -webkit-appearance: none;
+            background: transparent;
+            width: 100%;
+        }
+
+        input[type=range]:focus {
+            outline: none;
+        }
+
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 6px;
+            cursor: pointer;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        input[type=range]::-webkit-slider-thumb {
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #00f3ff;
+            cursor: pointer;
+            -webkit-appearance: none;
+            margin-top: -7px;
+            box-shadow: 0 0 12px #00f3ff;
+            transition: transform 0.1s ease, background-color 0.3s ease;
+        }
+
+        input[type=range]::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        /* Active Tab indicator animation */
+        .tab-active {
+            background: linear-gradient(135deg, rgba(0, 243, 255, 0.2), rgba(176, 0, 255, 0.2));
+            border-color: rgba(0, 243, 255, 0.5);
+            box-shadow: 0 0 20px rgba(0, 243, 255, 0.2);
+            color: #ffffff;
+        }
+
+        /* Mascot SVG Expressions Styling */
+        .mascot-glow {
+            filter: drop-shadow(0 0 15px rgba(0, 243, 255, 0.4));
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(7, 9, 14, 0.8);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 243, 255, 0.4);
+        }
+    </style>
+</head>
+<body class="min-h-screen relative flex flex-col justify-between selection:bg-neon-cyan selection:text-black">
+
+    <!-- Interactive Canvas Background -->
+    <canvas id="bg-canvas" class="fixed inset-0 pointer-events-none z-0"></canvas>
+
+    <!-- Top Navigation Bar -->
+    <header class="relative z-10 w-full border-b border-white/10 glass-panel">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+            <!-- Brand Logo -->
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-neon-cyan via-neon-purple to-neon-gold p-0.5 shadow-neon-cyan">
+                    <div class="w-full h-full bg-slate-950 rounded-[10px] flex items-center justify-center">
+                        <i data-lucide="zap" class="w-5 h-5 text-neon-cyan"></i>
+                    </div>
+                </div>
+                <div>
+                    <span class="text-xl font-extrabold tracking-wider bg-clip-text text-transparent bg-gradient-to-r from-neon-cyan via-white to-neon-purple">
+                        AETHER<span class="text-xs ml-1 px-1.5 py-0.5 rounded border border-neon-cyan/40 text-neon-cyan font-mono">v2.5</span>
+                    </span>
+                    <p class="text-[10px] text-gray-400 font-medium tracking-widest uppercase">Financial Intelligence Suite</p>
+                </div>
+            </div>
+
+            <!-- Header Utility Controls -->
+            <div class="flex items-center gap-4">
+                <!-- Audio Toggle Button -->
+                <button id="audio-toggle-btn" class="glass-panel px-4 py-2 rounded-xl flex items-center gap-2 text-xs font-semibold text-gray-300 hover:text-white hover:border-neon-cyan/50 transition-all duration-300 group">
+                    <i id="audio-icon" data-lucide="volume-2" class="w-4 h-4 text-neon-cyan group-hover:scale-110 transition-transform"></i>
+                    <span id="audio-label" class="hidden sm:inline">SFX: ON</span>
+                </button>
+
+                <!-- Status Badge -->
+                <div class="hidden md:flex items-center gap-2 glass-panel px-3 py-1.5 rounded-xl text-xs text-emerald-400 border-emerald-500/20">
+                    <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                    Engine Active
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace Container -->
+    <main class="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex-grow w-full">
+        
+        <!-- Navigation Tabs -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+            <button id="tab-compound" class="tab-btn tab-active glass-panel p-4 rounded-2xl flex items-center gap-4 transition-all duration-300 border border-white/10 hover:border-neon-cyan/40 text-left group">
+                <div class="p-3 rounded-xl bg-neon-cyan/10 text-neon-cyan group-hover:scale-110 transition-transform">
+                    <i data-lucide="trending-up" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide">Compound Wealth</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Exponential growth engine</p>
+                </div>
+            </button>
+
+            <button id="tab-mortgage" class="tab-btn glass-panel p-4 rounded-2xl flex items-center gap-4 transition-all duration-300 border border-white/10 hover:border-neon-purple/40 text-left group">
+                <div class="p-3 rounded-xl bg-neon-purple/10 text-neon-purple group-hover:scale-110 transition-transform">
+                    <i data-lucide="home" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide">Mortgage Matrix</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Loan & interest structure</p>
+                </div>
+            </button>
+
+            <button id="tab-crypto" class="tab-btn glass-panel p-4 rounded-2xl flex items-center gap-4 transition-all duration-300 border border-white/10 hover:border-neon-gold/40 text-left group">
+                <div class="p-3 rounded-xl bg-neon-gold/10 text-neon-gold group-hover:scale-110 transition-transform">
+                    <i data-lucide="coins" class="w-6 h-6"></i>
+                </div>
+                <div>
+                    <h3 class="font-bold text-sm tracking-wide">Asset Tax Lab</h3>
+                    <p class="text-xs text-gray-400 mt-0.5">Crypto & stock gain realization</p>
+                </div>
+            </button>
+        </div>
+
+        <!-- Main Grid Layout -->
+        <div class="neon-border-wrapper">
+            <div class="glass-panel rounded-[23px] p-6 lg:p-8 grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                
+                <!-- Left Column: Interactive Controls (7 cols) -->
+                <div class="lg:col-span-7 space-y-6">
+                    <div class="flex items-center justify-between border-b border-white/10 pb-4">
+                        <div>
+                            <h2 id="calc-title" class="text-xl font-extrabold tracking-tight text-white flex items-center gap-2">
+                                Compound Interest Engine
+                            </h2>
+                            <p id="calc-desc" class="text-xs text-gray-400 mt-1">Simulate multi-year investment yield with recurring contributions.</p>
+                        </div>
+                        <span id="currency-badge" class="px-2.5 py-1 rounded-lg bg-white/5 border border-white/10 text-xs font-mono text-neon-cyan">USD ($)</span>
+                    </div>
+
+                    <!-- Dynamic Input Sliders Container -->
+                    <div id="dynamic-inputs-container" class="space-y-5">
+                        <!-- Inputs injected dynamically via JS based on selected calculator -->
+                    </div>
+                </div>
+
+                <!-- Right Column: Visual Outputs & Mascot (5 cols) -->
+                <div class="lg:col-span-5 space-y-6 flex flex-col justify-between h-full">
+                    
+                    <!-- Chart Viewport -->
+                    <div class="glass-panel rounded-2xl p-5 border border-white/10 relative overflow-hidden">
+                        <div class="flex items-center justify-between mb-4">
+                            <h4 class="text-xs font-bold uppercase tracking-wider text-gray-400">Yield Analytics</h4>
+                            <div class="flex items-center gap-3 text-xs">
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-neon-cyan"></span>Principal</span>
+                                <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-neon-purple"></span>Growth</span>
+                            </div>
+                        </div>
+
+                        <!-- Canvas Dynamic Chart -->
+                        <div class="relative w-full h-52 flex items-center justify-center">
+                            <canvas id="analyticsChart"></canvas>
+                        </div>
+
+                        <!-- Summary Cards -->
+                        <div class="grid grid-cols-2 gap-3 mt-4 pt-4 border-t border-white/10">
+                            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                                <p class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Output Value</p>
+                                <p id="summary-total" class="text-lg font-extrabold text-neon-cyan mt-0.5">$0</p>
+                            </div>
+                            <div class="p-3 rounded-xl bg-white/[0.02] border border-white/5">
+                                <p id="summary-secondary-label" class="text-[10px] text-gray-400 uppercase font-bold tracking-wider">Total Interest Realized</p>
+                                <p id="summary-secondary-val" class="text-lg font-extrabold text-neon-purple mt-0.5">$0</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Anime Financial Mascot Panel -->
+                    <div id="mascot-card" class="glass-panel rounded-2xl p-4 border border-white/10 flex items-center gap-4 relative overflow-hidden transition-all duration-500">
+                        <div class="relative flex-shrink-0">
+                            <!-- Mascot SVG Vector Graphic -->
+                            <div class="w-20 h-20 rounded-2xl bg-gradient-to-br from-slate-900 to-slate-800 border border-white/20 flex items-center justify-center relative shadow-inner overflow-hidden">
+                                <svg id="mascot-svg" class="w-16 h-16 transition-all duration-500 mascot-glow" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <!-- Base Face -->
+                                    <circle cx="50" cy="50" r="40" fill="url(#avatar-grad)" stroke="#00f3ff" stroke-width="2"/>
+                                    <!-- Dynamic Hair/Features -->
+                                    <path d="M25 35 Q50 10 75 35 Q65 25 50 28 Q35 25 25 35 Z" fill="#b000ff" />
+                                    <!-- Eyes Container -->
+                                    <g id="mascot-eyes">
+                                        <!-- Happy/Bullish State (Default) -->
+                                        <ellipse cx="38" cy="48" rx="4" ry="6" fill="#00f3ff"/>
+                                        <ellipse cx="62" cy="48" rx="4" ry="6" fill="#00f3ff"/>
+                                        <circle cx="39" cy="46" r="1.5" fill="white"/>
+                                        <circle cx="63" cy="46" r="1.5" fill="white"/>
+                                    </g>
+                                    <!-- Mouth Container -->
+                                    <path id="mascot-mouth" d="M 40 65 Q 50 75 60 65" stroke="#00f3ff" stroke-width="3" stroke-linecap="round" fill="none"/>
+                                    
+                                    <defs>
+                                        <linearGradient id="avatar-grad" x1="10" y1="10" x2="90" y2="90" gradientUnits="userSpaceOnUse">
+                                            <stop stop-color="#1e293b"/>
+                                            <stop offset="1" stop-color="#0f172a"/>
+                                        </linearGradient>
+                                    </defs>
+                                </svg>
+                            </div>
+                            <span id="mascot-badge" class="absolute -bottom-1 -right-1 px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-neon-cyan text-black uppercase tracking-wider">Bullish</span>
+                        </div>
+
+                        <!-- Mascot Dialogue Box -->
+                        <div class="flex-grow">
+                            <div class="flex items-center gap-1.5 text-xs text-neon-cyan font-semibold mb-1">
+                                <i data-lucide="bot" class="w-3.5 h-3.5"></i>
+                                <span id="mascot-name">Kira • AI Advisory</span>
+                            </div>
+                            <p id="mascot-speech" class="text-xs text-gray-300 leading-relaxed italic">
+                                "Compounding is the eighth wonder of the world! Keep adjusting the parameters to maximize your returns."
+                            </p>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="relative z-10 border-t border-white/10 glass-panel mt-8 py-4">
+        <div class="max-w-7xl mx-auto px-4 text-center text-xs text-gray-500 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <p>© 2026 AETHER Wealth Labs. Designed for Tier 1 Investment Workflows.</p>
+            <div class="flex items-center gap-4 text-gray-400">
+                <span class="hover:text-neon-cyan cursor-pointer transition-colors">Privacy Protocol</span>
+                <span>•</span>
+                <span class="hover:text-neon-cyan cursor-pointer transition-colors">Documentation</span>
+                <span>•</span>
+                <span class="hover:text-neon-cyan cursor-pointer transition-colors">API v2</span>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript Logic Application Suite -->
+    <script>
+        /* ==========================================================================
+           1. WEB AUDIO API SYNTHESIZER (No external audio assets)
+           ========================================================================== */
+        class SoundEngine {
+            constructor() {
+                this.ctx = null;
+                this.muted = false;
+                this.lastSlideTime = 0;
+            }
+
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    this.ctx = new AudioCtx();
+                }
+            }
+
+            playPop() {
+                if (this.muted) return;
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                osc.frequency.exponentialRampToValueAtTime(800, this.ctx.currentTime + 0.04);
+
+                gain.gain.setValueAtTime(0.15, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
+
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+
+                osc.start();
+                osc.stop(this.ctx.currentTime + 0.04);
+            }
+
+            playSliderTone(val, min, max) {
+                if (this.muted) return;
+                const now = performance.now();
+                if (now - this.lastSlideTime < 40) return; // Throttle sound playback
+                this.lastSlideTime = now;
+
+                this.init();
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+
+                // Map value to pitch frequency between 250Hz and 700Hz
+                const normalized = (val - min) / (max - min);
+                const freq = 250 + normalized * 450;
+
+                osc.type = 'triangle';
+                osc.frequency.setValueAtTime(freq, this
